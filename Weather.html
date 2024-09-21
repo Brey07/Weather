@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clima Actual</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Clima en tu ciudad</h1>
+        <input type="text" id="city" placeholder="Ingresa una ciudad" />
+        <button onclick="getWeatherByCity()">Obtener Clima</button>
+        <button onclick="getWeatherByLocation()">Clima en mi ubicación</button>
+        <div id="weather">
+            <!-- Aquí se mostrarán los resultados -->
+        </div>
+    </div>
+    
+    <script>
+        const apiKey = "1c50a2441ee12de0d238f474310e99c6";
+
+        function getWeatherByCity() {
+            const city = document.getElementById('city').value;
+            getWeatherData(`q=${city}`);
+        }
+
+        function getWeatherByLocation() {
+            if (navigator.geolocation) {
+                // Mostrar mensaje mientras se obtiene la ubicación
+                document.getElementById('weather').innerHTML = `<p>Obteniendo tu ubicación...</p>`;
+                
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    getWeatherData(`lat=${lat}&lon=${lon}`);
+                }, error => {
+                    document.getElementById('weather').innerHTML = `<p>No se pudo obtener tu ubicación</p>`;
+                    console.error(error);
+                });
+            } else {
+                document.getElementById('weather').innerHTML = `<p>Geolocalización no soportada por tu navegador</p>`;
+            }
+        }
+
+        function getWeatherData(query) {
+            // Mostrar un mensaje de carga mientras se espera la respuesta
+            document.getElementById('weather').innerHTML = `<p>Buscando el clima, por favor espera...</p>`;
+
+            // Retrasar la solicitud 5 segundos (5000 milisegundos)
+            setTimeout(() => {
+                const url = `https://api.openweathermap.org/data/2.5/weather?${query}&appid=${apiKey}&units=metric&lang=es`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cod === 200) {
+                            document.getElementById('weather').innerHTML = `
+                                <h3>Clima en ${data.name}, ${data.sys.country}</h3>
+                                <p>Temperatura: ${data.main.temp}°C</p>
+                                <p>Clima: ${data.weather[0].description}</p>
+                                <p>Humedad: ${data.main.humidity}%</p>
+                                <p>Viento: ${data.wind.speed} m/s</p>
+                            `;
+                        } else {
+                            document.getElementById('weather').innerHTML = `<p>Ciudad no encontrada</p>`;
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('weather').innerHTML = `<p>Error al obtener el clima</p>`;
+                        console.error(error);
+                    });
+            }, 5000); // 5000 milisegundos = 5 segundos
+        }
+    </script>
+</body>
+</html>
